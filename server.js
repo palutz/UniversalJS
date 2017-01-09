@@ -1,0 +1,30 @@
+"use strict"
+
+const fs = require("fs")
+const http = require("http")
+
+const server = http.createServer((req, res) => {
+  var body
+
+  body = ""
+  req.on("data", chunk => body = body + chunk)
+  req.on("end", () => {
+    var action, state
+
+    res.statusCode = 200
+    if (req.url === "/act") {
+      [action, state] = JSON.parse(body)
+      res.setHeader('Content-Type', 'text/json')
+      res.end(JSON.stringify({ count: state.count + 1 }))
+    } else if (req.url === "/index.js") {
+      res.end(fs.readFileSync("./index.js"))
+    } else {
+      res.end(fs.readFileSync("./index.html"))
+    }
+  })
+
+})
+
+server.listen(3000, "127.0.0.1", () => {
+  console.log("listening...")
+})
