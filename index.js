@@ -55,11 +55,7 @@ const listen = Task((rej, res) => {
 const loop = state =>
   listen.bind(action =>
     act(action, state)
-  ).bind(newState =>
-    render(newState).toTask().bind(() =>
-      loop(newState)
-    )
-  )
+  ).bind(main)
 
 // main :: State -> Task String State
 const main = state =>
@@ -72,7 +68,10 @@ const onClick = _ => ({
 
 // onLoad :: () => ()
 const onLoad = () => {
-  main({ count: 1 }).fork(console.log, console.log)
+  main({ count: 1 }).fork(
+    err => console.log("Error" + err),
+    res => console.log("Result: " + res)
+  )
 }
 
 // render :: State -> IO ()
