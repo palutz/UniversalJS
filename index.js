@@ -5,7 +5,7 @@
 // data IO a = IO (() -> a)
 const IO = unsafe => ({
   bind: f => IO(() => f(unsafe()).unsafe()),
-  toTask: () => Task((rej, res) => res(unsafe())),
+  toTask: () => Task((_, res) => res(unsafe())),
   unsafe: unsafe
 })
 IO.of = x => IO(() => x)
@@ -17,9 +17,25 @@ const Task = fork => ({
       f(x).fork(rej, res)
     )
   ),
-  fork: fork
+  fork: fork,
+  toTask: () => Task(fork)
 })
+Task.of = x => Task((_, res) => res(x))
 Task.handle = f => x => Task.dispatch(f(x))
+Task.nt = m => m.toTask()
+
+// data FreeMonad f a = Pure a | Bind f (FreeMonad f a) ?
+const Bind = (f, m) => ({
+  bind: g => Bind(g, Bind(f, m)),
+  // foldMap :: Functor f, g => (f a -> g a) -> (a -> g a) -> FreeMonad f a -> g a
+  foldMap: (t, of) => m.foldMap(t, of).bind(x => t(f(x))),
+  toTask: () => Bind(f, m).foldMap(Task.nt, Task.of)
+})
+const Pure = x => ({
+  bind: f => Bind(f, Pure(x)),
+  foldMap: (t, of) => of(x),
+  toTask: () => Task.of(x)
+})
 
 // act :: Action -> State -> Task String State
 const act = (action, state) => Task((rej, res) => {
@@ -51,19 +67,17 @@ const listen = Task((rej, res) => {
   }
 })
 
-// loop :: State -> Task String State
+// loop :: State -> FreeMonad State
 const loop = state =>
-  listen.bind(action =>
+  Pure(null).bind(() =>
+    listen
+  ).bind(action =>
     act(action, state)
-  ).bind(newState =>
-    render(newState).toTask().bind(() =>
-      loop(newState)
-    )
-  )
+  ).bind(main)
 
-// main :: State -> Task String State
+// main :: State -> FreeMonad State
 const main = state =>
-  render(state).toTask().bind(() => loop(state))
+  Pure(state).bind(render).bind(() => loop(state))
 
 // onClick :: Event -> Action
 const onClick = _ => ({
@@ -72,7 +86,10 @@ const onClick = _ => ({
 
 // onLoad :: () => ()
 const onLoad = () => {
-  main({ count: 1 }).fork(console.log, console.log)
+  main({ count: 1 }).foldMap(Task.nt, Task.of).fork(
+    err => console.log("Error: " + err),
+    res => console.log("Result: " + res)
+  )
 }
 
 // render :: State -> IO ()
