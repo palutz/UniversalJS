@@ -20,10 +20,16 @@ const Task = fork => ({
   fork: fork
 })
 Task.handle = f => x => Task.dispatch(f(x))
+Task.of = x => Task((_, res) => res(x))
+
+const act_ = (action, state) => ({
+  count: state.count + 1
+})
 
 // act :: Action -> State -> Task String State
 const act = (action, state) => Task((rej, res) => {
   var req
+  if (true) return res(act_(action, state))
 
   req = new XMLHttpRequest()
   req.onreadystatechange = () => {
