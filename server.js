@@ -20,10 +20,10 @@ const server = http.createServer((req, res) => {
       [action, state] = JSON.parse(body)
       res.setHeader('Content-Type', 'text/json')
       res.end(JSON.stringify(act_(action, state)))
-    } else if (req.url === "/index.js") {
-      res.end(fs.readFileSync("./index.js"))
+    } else if (req.url === "/bundle.js") {
+      res.end(fs.readFileSync("./public/bundle.js"))
     } else {
-      res.end(fs.readFileSync("./index.html"))
+      res.end(fs.readFileSync("./public/index.html"))
     }
   })
 

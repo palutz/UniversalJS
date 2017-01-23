@@ -4,7 +4,13 @@
     "url": "https://github.com/rodinhart/UniversalJS/issues"
   },
   "description": "",
-  "devDependencies": {},
+  "devDependencies": {
+    "concurrently": "^3.1.0",
+    "copy-webpack-plugin": "^4.0.1",
+    "raw-loader": "^0.5.1",
+    "webpack": "^1.14.0",
+    "webpack-livereload-plugin": "^0.10.0"
+  },
   "license": "MIT",
   "name": "universal-js",
   "repository": {
@@ -12,8 +18,14 @@
     "url": "git+https://github.com/rodinhart/UniversalJS.git"
   },
   "scripts": {
-    "start": "node server.js"
+    "pack": "webpack -w",
+    "start": "concurrently -k \"npm run pack\" \"npm run server\"",
+    "server": "node server.js"
   },
   "homepage": "https://github.com/rodinhart/UniversalJS#readme",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "dependencies": {
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2"
+  }
 }

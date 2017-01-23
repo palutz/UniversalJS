@@ -1,6 +1,7 @@
 "use strict"
 
-/* globals React, ReactDOM */
+var React = require("react")
+var ReactDOM = require("react-dom")
 
 // data IO a = IO (() -> a)
 const IO = unsafe => ({
@@ -86,3 +87,5 @@ const render = state => {
 
   return IO.of(null)
 }
+
+onLoad()
