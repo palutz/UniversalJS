@@ -20,7 +20,7 @@
   "scripts": {
     "pack": "webpack -w",
     "start": "concurrently -k \"npm run pack\" \"npm run server\"",
-    "server": "node server.js"
+    "server": "nodemon server.js"
   },
   "homepage": "https://github.com/rodinhart/UniversalJS#readme",
   "version": "0.1.0",

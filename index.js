@@ -1,5 +1,6 @@
 "use strict"
 
+// Imports.
 var shared = require("./shared.js")
 
 // data IO a = IO (() -> a)
@@ -22,6 +23,7 @@ const Task = fork => ({
 Task.handle = f => x => Task.dispatch(f(x))
 Task.of = x => Task((_, res) => res(x))
 
+
 // act :: Action -> State -> Task String State
 const act = (action, state) => Task((rej, res) => {
   var req
@@ -35,6 +37,7 @@ const act = (action, state) => Task((rej, res) => {
     }
   }
   req.open("POST", "/act", true)
+  delete state.img
   req.send(JSON.stringify([action, state]))
 })
 
@@ -76,9 +79,9 @@ const onLoad = () => {
     y: -2
   }
 
-  state.img = shared.mandelbrot(state)
+  state.x -= (state.s / state.H) * (state.W - state.H) / 2
 
-  main(state).fork(
+  act({ type: "start" }, state).bind(main).fork(
     err => console.log("Error" + err),
     res => console.log("Result: " + res)
   )
@@ -104,4 +107,5 @@ const render = state => {
   return IO.of(null)
 }
 
+// Start
 onLoad()

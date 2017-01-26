@@ -1,11 +1,18 @@
 "use strict"
 
+var AA = [[0, 0], [0.3, 0], [0.3, 0.3],
+  [0, 0.3], [-0.3, 0.3], [-0.3, 0],
+  [-0.3, -0.3], [0, -0.3], [0.3, -0.3]]
+
 // act :: Action -> State -> State
 const act = (action, state) => {
   var Z = 4
   var q, s, x, y
 
-  if (action.type === "zoom") {
+  console.time("act")
+  if (action.type === "start") {
+    state.img = mandelbrot(state)
+  } else if (action.type === "zoom") {
     q = state.s / state.H
     x = state.x + action.x * q
     y = state.y + (state.H - 1 - action.y) * q
@@ -19,9 +26,9 @@ const act = (action, state) => {
       y: y - state.H / 2 * q
     }, mixin(state, {}))
     state.img = mandelbrot(state)
-
-    return state
   }
+
+  console.timeEnd("act")
 
   return state
 
@@ -45,7 +52,12 @@ const mandelbrot = state => {
   for (sy = 0; sy < state.H; sy++) {
     r[sy] = []
     for (sx = 0; sx < state.W; sx++) {
-      r[sy][sx] = iterate(sx, sy)
+      r[sy][sx] = AA.map(s =>
+        iterate(sx + s[0], sy + s[1])
+      ).reduce((col, x) =>
+        [col[0] + x[0] / 9, col[1] + x[1] / 9, col[2] + x[2] / 9],
+        [0, 0, 0]
+      )
     }
   }
 

@@ -22,5 +22,6 @@ module.exports = {
       { from: "index.html", to: "public/index.html" }
     ])
   ],
-  target: "web"
+  target: "web",
+  watch: true
 }

@@ -2,13 +2,12 @@
 
 const fs = require("fs")
 const http = require("http")
-
-const act_ = (action, state) => ({
-  count: state.count + 1
-})
+const shared = require("./shared.js")
 
 const server = http.createServer((req, res) => {
   var body
+
+  console.log(req.url)
 
   body = ""
   req.on("data", chunk => body = body + chunk)
@@ -17,9 +16,9 @@ const server = http.createServer((req, res) => {
 
     res.statusCode = 200
     if (req.url === "/act") {
-      [action, state] = JSON.parse(body)
+      ;[action, state] = JSON.parse(body)
       res.setHeader('Content-Type', 'text/json')
-      res.end(JSON.stringify(act_(action, state)))
+      res.end(JSON.stringify(shared.act(action, state)))
     } else if (req.url === "/bundle.js") {
       res.end(fs.readFileSync("./public/bundle.js"))
     } else {
