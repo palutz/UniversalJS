@@ -21,8 +21,8 @@ const Task = fork => ({
   fork: fork,
   toTask: () => Task(fork)
 })
-Task.of = x => Task((_, res) => res(x))
 Task.handle = f => x => Task.dispatch(f(x))
+Task.of = x => Task((_, res) => res(x))
 Task.nt = m => m.toTask()
 
 // data FreeMonad f a = Pure a | Bind f (FreeMonad f a) ?
@@ -98,7 +98,7 @@ const onLoad = () => {
 
   state.x -= (state.s / state.H) * (state.W - state.H) / 2
 
-  act({ type: "start" }, state).bind(main).foldMap(Task.nt, Task.of).fork(
+  Pure({ type: "start" }).bind(action => act(action, state)).bind(main).foldMap(Task.nt, Task.of).fork(
     err => console.log("Error" + err),
     res => console.log("Result: " + res)
   )
