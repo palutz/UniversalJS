@@ -1,6 +1,6 @@
 "use strict"
 
-const MODE = "webworker"
+const MODE = "client"
 
 // Imports.
 var shared = require("./shared.js")
@@ -26,6 +26,12 @@ Task.handle = f => x => Task.dispatch(f(x))
 Task.of = x => Task((_, res) => res(x))
 
 
+var worker, workerRet
+if (MODE === "worker") {
+  worker = new Worker('./worker.bundle.js')
+  worker.onmessage = e => workerRet(e.data)
+}
+
 // act :: Action -> State -> Task String State
 const act = (action, state) => Task((rej, res) => {
   var req
@@ -44,8 +50,14 @@ const act = (action, state) => Task((rej, res) => {
     req.open("POST", "/act", true)
     delete state.img
     req.send(JSON.stringify([action, state]))
-  } else if (MODE === "webworker") {
-
+  } else if (MODE === "worker") {
+    console.time("message")
+    workerRet = t => {
+      workerRet = undefined
+      console.timeEnd("message")
+      res(t)
+    }
+    worker.postMessage([action, state])
   } else {
     return res(shared.act(action, state))
   }

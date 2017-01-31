@@ -25,8 +25,10 @@ const server = http.createServer((req, res) => {
       res.setHeader('Content-Type', 'text/json')
       res.end(JSON.stringify(state))
       console.timeEnd("response")
-    } else if (req.url === "/bundle.js") {
-      res.end(fs.readFileSync("./public/bundle.js"))
+    } else if (req.url === "/index.bundle.js") {
+      res.end(fs.readFileSync("./public/index.bundle.js"))
+    } else if (req.url === "/worker.bundle.js") {
+      res.end(fs.readFileSync("./public/worker.bundle.js"))
     } else {
       res.end(fs.readFileSync("./public/index.html"))
     }
