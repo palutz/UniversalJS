@@ -2,7 +2,10 @@ var CopyWebpackPlugin = require('copy-webpack-plugin')
 var LiveReloadPlugin = require('webpack-livereload-plugin')
 
 module.exports = {
-  entry: ["./index.html", "./index.js"],
+  entry: {
+    index: ["./index.html", "./index.js"],
+    worker: "./worker.js"
+  },
   module: {
     loaders: [
       {
@@ -13,8 +16,8 @@ module.exports = {
     ]
   },
   output: {
-    filename: "./public/bundle.js",
-    chunkFilename: "./public/bundle.js"
+    path: "./public/",
+    filename: "[name].bundle.js"
   },
   plugins: [
     new LiveReloadPlugin(),

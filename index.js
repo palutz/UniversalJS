@@ -1,5 +1,7 @@
 "use strict"
 
+const MODE = "client"
+
 // Imports.
 var shared = require("./shared.js")
 
@@ -39,21 +41,41 @@ const Pure = x => ({
 })
 
 
+var worker, workerRet
+if (MODE === "worker") {
+  worker = new Worker('./worker.bundle.js')
+  worker.onmessage = e => workerRet(e.data)
+}
+
 // act :: Action -> State -> Task String State
 const act = (action, state) => Task((rej, res) => {
   var req
 
-  if (true) return res(shared.act(action, state))
-
-  req = new XMLHttpRequest()
-  req.onreadystatechange = () => {
-    if (req.readyState === 4) {
-      res(JSON.parse(req.responseText))
+  if (MODE === "server") {
+    console.time("request")
+    req = new XMLHttpRequest()
+    req.onreadystatechange = () => {
+      var t
+      if (req.readyState === 4) {
+        t = JSON.parse(req.responseText)
+        console.timeEnd("request")
+        res(t)
+      }
     }
+    req.open("POST", "/act", true)
+    delete state.img
+    req.send(JSON.stringify([action, state]))
+  } else if (MODE === "worker") {
+    console.time("message")
+    workerRet = t => {
+      workerRet = undefined
+      console.timeEnd("message")
+      res(t)
+    }
+    worker.postMessage([action, state])
+  } else {
+    return res(shared.act(action, state))
   }
-  req.open("POST", "/act", true)
-  delete state.img
-  req.send(JSON.stringify([action, state]))
 })
 
 // listen :: Task Void Action
@@ -106,20 +128,23 @@ const onLoad = () => {
 
 // render :: State -> IO ()
 const render = state => {
-  var g, img, sx, sy
+  var col, g, img, sx, sy
 
+  console.time("render")
   g = document.getElementById("canvas").getContext("2d")
   img = g.getImageData(0, 0, state.W, state.H)
   for (sy = 0; sy < state.H; sy++) {
     for (sx = 0; sx < state.W; sx++) {
-      img.data[(sx + (state.H - 1 - sy) * state.W) * 4 + 0] = state.img[sy][sx][0]
-      img.data[(sx + (state.H - 1 - sy) * state.W) * 4 + 1] = state.img[sy][sx][1]
-      img.data[(sx + (state.H - 1 - sy) * state.W) * 4 + 2] = state.img[sy][sx][2]
+      col = shared.palette(state.img[sy][sx])
+      img.data[(sx + (state.H - 1 - sy) * state.W) * 4 + 0] = col[0]
+      img.data[(sx + (state.H - 1 - sy) * state.W) * 4 + 1] = col[1]
+      img.data[(sx + (state.H - 1 - sy) * state.W) * 4 + 2] = col[2]
       img.data[(sx + (state.H - 1 - sy) * state.W) * 4 + 3] = 255
     }
   }
 
   g.putImageData(img, 0, 0)
+  console.timeEnd("render")
 
   return IO.of(null)
 }
