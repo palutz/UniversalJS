@@ -1,6 +1,7 @@
 "use strict"
 
-/* globals React, ReactDOM */
+// Imports.
+var shared = require("./shared.js")
 
 // data IO a = IO (() -> a)
 const IO = unsafe => ({
@@ -37,14 +38,12 @@ const Pure = x => ({
   toTask: () => Task.of(x)
 })
 
-const act_ = (action, state) => ({
-  count: state.count + 1
-})
 
 // act :: Action -> State -> Task String State
 const act = (action, state) => Task((rej, res) => {
   var req
-  if (true) return res(act_(action, state))
+
+  if (true) return res(shared.act(action, state))
 
   req = new XMLHttpRequest()
   req.onreadystatechange = () => {
@@ -53,16 +52,9 @@ const act = (action, state) => Task((rej, res) => {
     }
   }
   req.open("POST", "/act", true)
+  delete state.img
   req.send(JSON.stringify([action, state]))
 })
-
-// app :: State => DOM
-const app = state =>
-  React.createElement(
-    "div",
-    { onClick: Task.handle(onClick), style: { fontSize: 24 } },
-    "Count: " + state.count
-  )
 
 // listen :: Task Void Action
 const listen = Task((rej, res) => {
@@ -85,21 +77,52 @@ const main = state =>
   Pure(state).bind(render).bind(() => loop(state))
 
 // onClick :: Event -> Action
-const onClick = _ => ({
-  type: "inc"
+const onClick = e => ({
+  type: "zoom",
+  x: e.clientX,
+  y: e.clientY
 })
 
 // onLoad :: () => ()
 const onLoad = () => {
-  main({ count: 1 }).foldMap(Task.nt, Task.of).fork(
-    err => console.log("Error: " + err),
+  document.getElementById("canvas").onclick = Task.handle(onClick)
+
+  var state = {
+    W: document.getElementById("canvas").width,
+    H: document.getElementById("canvas").height,
+    count: 1,
+    s: 4,
+    x: -2,
+    y: -2
+  }
+
+  state.x -= (state.s / state.H) * (state.W - state.H) / 2
+
+  act({ type: "start" }, state).bind(main).foldMap(Task.nt, Task.of).fork(
+    err => console.log("Error" + err),
     res => console.log("Result: " + res)
   )
 }
 
 // render :: State -> IO ()
 const render = state => {
-  ReactDOM.render(app(state), document.getElementById("target"))
+  var g, img, sx, sy
+
+  g = document.getElementById("canvas").getContext("2d")
+  img = g.getImageData(0, 0, state.W, state.H)
+  for (sy = 0; sy < state.H; sy++) {
+    for (sx = 0; sx < state.W; sx++) {
+      img.data[(sx + (state.H - 1 - sy) * state.W) * 4 + 0] = state.img[sy][sx][0]
+      img.data[(sx + (state.H - 1 - sy) * state.W) * 4 + 1] = state.img[sy][sx][1]
+      img.data[(sx + (state.H - 1 - sy) * state.W) * 4 + 2] = state.img[sy][sx][2]
+      img.data[(sx + (state.H - 1 - sy) * state.W) * 4 + 3] = 255
+    }
+  }
+
+  g.putImageData(img, 0, 0)
 
   return IO.of(null)
 }
+
+// Start
+onLoad()
