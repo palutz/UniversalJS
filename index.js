@@ -6,7 +6,7 @@ var shared = require("./shared.js")
 // data IO a = IO (() -> a)
 const IO = unsafe => ({
   bind: f => IO(() => f(unsafe()).unsafe()),
-  toTask: () => Task((rej, res) => res(unsafe())),
+  toTask: () => Task((_, res) => res(unsafe())),
   unsafe: unsafe
 })
 IO.of = x => IO(() => x)
