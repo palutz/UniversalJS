@@ -1,9 +1,5 @@
 "use strict"
 
-var AA = [[0, 0], [0.3, 0], [0.3, 0.3],
-  [0, 0.3], [-0.3, 0.3], [-0.3, 0],
-  [-0.3, -0.3], [0, -0.3], [0.3, -0.3]]
-
 // act :: Action -> State -> State
 const act = (action, state) => {
   var Z = 4
@@ -43,7 +39,7 @@ const act = (action, state) => {
   }
 }
 
-// mandelbrot :: State -> [[Col]]
+// mandelbrot :: State -> [[Number]]
 const mandelbrot = state => {
   var col, q, sx, sy, r
 
@@ -52,12 +48,7 @@ const mandelbrot = state => {
   for (sy = 0; sy < state.H; sy++) {
     r[sy] = []
     for (sx = 0; sx < state.W; sx++) {
-      r[sy][sx] = AA.map(s =>
-        iterate(sx + s[0], sy + s[1])
-      ).reduce((col, x) =>
-        [col[0] + x[0] / 9, col[1] + x[1] / 9, col[2] + x[2] / 9],
-        [0, 0, 0]
-      )
+      r[sy][sx] = iterate(sx, sy)
     }
   }
 
@@ -68,7 +59,7 @@ const mandelbrot = state => {
 
     a = rx = state.x + sx * q
     b = ry = state.y + sy * q
-    n = 256
+    n = 256 * 16
     do {
       c = a * a
       d = b * b
@@ -77,13 +68,19 @@ const mandelbrot = state => {
       n--
     } while (n > 0 && c + d < 4)
 
-    return [17 * ((n & 7) | ((n >>> 1) & 8)),
-      17 * ((n & 3) | ((n >>> 3) & 12)),
-      17 * ((n & 3) | ((n >>> 1) & 4) | ((n >>> 4) & 8))]
+    return n % 256
   }
 }
 
+// palette :: Number -> RGB
+const palette = n => [
+  17 * ((n & 7) | ((n >>> 1) & 8)),
+  17 * ((n & 3) | ((n >>> 3) & 12)),
+  17 * ((n & 3) | ((n >>> 1) & 4) | ((n >>> 4) & 8))
+]
+
 module.exports = {
   act: act,
-  mandelbrot: mandelbrot
+  mandelbrot: mandelbrot,
+  palette: palette
 }
