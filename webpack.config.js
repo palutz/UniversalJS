@@ -22,7 +22,7 @@ module.exports = {
   plugins: [
     new LiveReloadPlugin(),
     new CopyWebpackPlugin([
-      { from: "index.html", to: "public/index.html" }
+      { from: "index.html", to: "index.html" }
     ])
   ],
   target: "web",
